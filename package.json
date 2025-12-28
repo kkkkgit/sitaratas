@@ -1,0 +1,12 @@
+{
+  "name": "sitaratas",
+  "private": true,
+  "workspaces": [
+    "server",
+    "engine"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w server",
+    "build": "npm run build -w server && npm run build -w engine"
+  }
+}

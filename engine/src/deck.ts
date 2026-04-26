@@ -27,3 +27,13 @@ export class Deck {
         return this.cards.length
     }
 }
+
+export function makeDeck52(): Card[] {
+    const cards: Card[] = []
+    for (const suit of ALL_SUITS) {
+        for (const rank of ALL_RANKS) {
+            cards.push({ suit, rank })
+        }
+    }
+    return cards
+}

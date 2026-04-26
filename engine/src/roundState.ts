@@ -3,6 +3,10 @@ import { Deck } from "./deck.js"
 
 export type PlayerId = string
 
+export const MIN_PLAYERS = 3
+export const MAX_PLAYERS = 6
+export const DECK_SIZE = 52
+
 export enum RoundPhase {
   Bidding = "BIDDING",
   Playing = "PLAYING",
@@ -60,8 +64,15 @@ export function createRound(args: {
   rng?: () => number
 }): RoundState {
   const { roundIndex, playerOrder, dealerIndex, cardsPerPlayer, rng } = args
-  if (playerOrder.length < 3) throw new Error("Need at least 3 players")
+  if (playerOrder.length < MIN_PLAYERS || playerOrder.length > MAX_PLAYERS) {
+    throw new Error("Need 3 to 6 players")
+  }
+  if (new Set(playerOrder).size !== playerOrder.length) throw new Error("Player IDs must be unique")
+  if (dealerIndex < 0 || dealerIndex >= playerOrder.length) throw new Error("Invalid dealerIndex")
   if (cardsPerPlayer < 1) throw new Error("cardsPerPlayer must be >= 1")
+  if (cardsPerPlayer * playerOrder.length > DECK_SIZE) {
+    throw new Error("Not enough cards for this player count and round size")
+  }
 
   const deck = new Deck()
   deck.shuffle(rng)

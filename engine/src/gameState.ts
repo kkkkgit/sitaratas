@@ -1,4 +1,4 @@
-import { createRound, PlayerId, RoundState } from "./roundState.js"
+import { createRound, DECK_SIZE, MAX_PLAYERS, MIN_PLAYERS, PlayerId, RoundState } from "./roundState.js"
 import { initScores, ScoreState, scoreRound } from "./scoring.js"
 
 export type GameState = {
@@ -6,7 +6,7 @@ export type GameState = {
   dealerIndex: number
 
   maxCardsPerPlayer: number
-  schedule: number[] // e.g. [1,2,3,...,9,8,...,1]
+  schedule: number[] // e.g. [1,1,1,1,2,3,...,9,8,...,1]
 
   roundIndex: number
   round: RoundState
@@ -14,12 +14,19 @@ export type GameState = {
   scores: ScoreState
 }
 
-function buildSchedule(max: number): number[] {
+function buildSchedule(max: number, nPlayers: number): number[] {
+  // Start with nPlayers rounds of 1 card each
+  const start: number[] = Array(nPlayers).fill(1)
+  
+  // Then go up from 2 to max
   const up: number[] = []
-  for (let i = 1; i <= max; i++) up.push(i)
+  for (let i = 2; i <= max; i++) up.push(i)
+  
+  // Then go down from max-1 to 1
   const down: number[] = []
   for (let i = max - 1; i >= 1; i--) down.push(i)
-  return [...up, ...down]
+  
+  return [...start, ...up, ...down]
 }
 
 function nextDealerIndex(current: number, n: number): number {
@@ -27,13 +34,7 @@ function nextDealerIndex(current: number, n: number): number {
 }
 
 export function computeMaxCardsPerPlayer(nPlayers: number): number {
-  // Your stated rules:
-  // 3 players -> 12
-  // 4 players -> 9
-  // Otherwise: floor(36 / nPlayers)
-  if (nPlayers === 3) return 12
-  if (nPlayers === 4) return 9
-  return Math.floor(36 / nPlayers)
+  return Math.floor(DECK_SIZE / nPlayers)
 }
 
 export function createGame(args: {
@@ -42,11 +43,16 @@ export function createGame(args: {
   rng?: () => number
 }): GameState {
   const { playerOrder, rng } = args
-  if (playerOrder.length < 3) throw new Error("Need at least 3 players")
+  if (playerOrder.length < MIN_PLAYERS || playerOrder.length > MAX_PLAYERS) {
+    throw new Error("Need 3 to 6 players")
+  }
+  if (new Set(playerOrder).size !== playerOrder.length) throw new Error("Player IDs must be unique")
 
   const dealerIndex = args.dealerIndex ?? 0
+  if (dealerIndex < 0 || dealerIndex >= playerOrder.length) throw new Error("Invalid dealerIndex")
+
   const maxCardsPerPlayer = computeMaxCardsPerPlayer(playerOrder.length)
-  const schedule = buildSchedule(maxCardsPerPlayer)
+  const schedule = buildSchedule(maxCardsPerPlayer, playerOrder.length)
 
   const roundIndex = 0
   const round = createRound({

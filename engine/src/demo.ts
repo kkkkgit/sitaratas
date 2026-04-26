@@ -4,8 +4,8 @@ import { createGame, finishRoundAndStartNext } from "./gameState.js"
 import { addBid } from "./roundState.js"
 import { playCard } from "./play.js"
 import { RoundPhase } from "./roundState.js"
-import type { PlayerId } from "./roundState"
-import type { Card } from "./cards"
+import type { PlayerId } from "./roundState.js"
+import type { Card } from "./cards.js"
 
 function seededRng(seed: number): () => number {
   // simple LCG for repeatable tests

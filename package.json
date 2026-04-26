@@ -3,10 +3,14 @@
   "private": true,
   "workspaces": [
     "server",
-    "engine"
+    "engine",
+    "web"
   ],
   "scripts": {
     "dev": "npm run dev -w server",
-    "build": "npm run build -w server && npm run build -w engine"
+    "dev:web": "npm run dev -w web",
+    "build": "npm run build -w engine && npm run build -w web && npm run build -w server",
+    "start": "npm start -w server",
+    "test": "npm test -w engine"
   }
 }

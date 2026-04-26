@@ -6,11 +6,7 @@ export enum Suit {
 }
 
 export enum Rank {
-    Two = 2,
-    Three,
-    Four,
-    Five,
-    Six,
+    Six = 6,
     Seven,
     Eight,
     Nine,
@@ -34,10 +30,6 @@ export const ALL_SUITS: Suit[] = [
 ]
 
 export const ALL_RANKS: Rank[] = [
-    Rank.Two,
-    Rank.Three,
-    Rank.Four,
-    Rank.Five,
     Rank.Six,
     Rank.Seven,
     Rank.Eight,

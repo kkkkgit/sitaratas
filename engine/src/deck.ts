@@ -28,7 +28,7 @@ export class Deck {
     }
 }
 
-export function makeDeck52(): Card[] {
+export function makeDeck36(): Card[] {
     const cards: Card[] = []
     for (const suit of ALL_SUITS) {
         for (const rank of ALL_RANKS) {

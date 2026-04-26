@@ -133,6 +133,7 @@ export function playCard(round: RoundState, playerId: PlayerId, card: Card): Rou
     hands: newHands,
     tricksWon: newTricksWon,
     phase: roundDone ? RoundPhase.Scoring : RoundPhase.Playing,
+    lastTrick: { ...trick, plays: newPlays, leadSuit, winnerId },
     currentTrick: roundDone
       ? { ...round.currentTrick, plays: newPlays, leadSuit, winnerId }
       : { leaderId: winnerId, plays: [] },

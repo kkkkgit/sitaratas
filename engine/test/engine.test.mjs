@@ -10,26 +10,22 @@ import {
   createGame,
   createRound,
   initScores,
-  makeDeck52,
+  makeDeck36,
   playCard,
   scoreRound,
 } from "../dist/index.js"
 
 const players = ["P1", "P2", "P3", "P4"]
 
-test("makeDeck52 creates 52 unique cards from 2 to ace", () => {
-  const deck = makeDeck52()
+test("makeDeck36 creates 36 unique cards from 6 to ace", () => {
+  const deck = makeDeck36()
   const unique = new Set(deck.map((card) => `${card.suit}:${card.rank}`))
 
-  assert.equal(deck.length, 52)
-  assert.equal(unique.size, 52)
+  assert.equal(deck.length, 36)
+  assert.equal(unique.size, 36)
   assert.deepEqual(
     deck.filter((card) => card.suit === Suit.Clubs).map((card) => card.rank),
     [
-      Rank.Two,
-      Rank.Three,
-      Rank.Four,
-      Rank.Five,
       Rank.Six,
       Rank.Seven,
       Rank.Eight,
@@ -56,11 +52,29 @@ test("game validates duplicate players and dealer index", () => {
   assert.throws(() => createGame({ playerOrder: players, dealerIndex: 4 }), /Invalid dealerIndex/)
 })
 
-test("max cards per player uses a 52-card deck", () => {
-  assert.equal(computeMaxCardsPerPlayer(3), 17)
-  assert.equal(computeMaxCardsPerPlayer(4), 13)
-  assert.equal(computeMaxCardsPerPlayer(5), 10)
-  assert.equal(computeMaxCardsPerPlayer(6), 8)
+test("max cards per player uses a 36-card deck", () => {
+  assert.equal(computeMaxCardsPerPlayer(3), 12)
+  assert.equal(computeMaxCardsPerPlayer(4), 9)
+  assert.equal(computeMaxCardsPerPlayer(5), 7)
+  assert.equal(computeMaxCardsPerPlayer(6), 6)
+})
+
+test("game schedule repeats the lowest and highest card rounds for every dealer", () => {
+  const game = createGame({ playerOrder: players, dealerIndex: 0 })
+
+  assert.deepEqual(game.schedule, [
+    1, 1, 1, 1,
+    2, 3, 4, 5, 6, 7, 8,
+    9, 9, 9, 9,
+    8, 7, 6, 5, 4, 3, 2,
+    1, 1, 1, 1,
+  ])
+})
+
+test("game randomizes starting dealer when dealerIndex is omitted", () => {
+  const game = createGame({ playerOrder: players, rng: () => 0.51 })
+
+  assert.equal(game.dealerIndex, 2)
 })
 
 test("round creation deals the requested hand size", () => {
@@ -74,6 +88,8 @@ test("round creation deals the requested hand size", () => {
 
   assert.equal(round.phase, RoundPhase.Bidding)
   assert.equal(round.currentTrick.leaderId, "P2")
+  assert.ok(round.trumpCard)
+  assert.equal(round.trumpSuit, round.trumpCard.suit)
   for (const player of players) {
     assert.equal(round.hands[player].length, 5)
   }
@@ -107,11 +123,12 @@ test("playCard rejects illegal plays and awards trump trick winner", () => {
     playerOrder: players,
     dealerIndex: 0,
     cardsPerPlayer: 1,
+    trumpCard: { suit: Suit.Spades, rank: Rank.Seven },
     trumpSuit: Suit.Spades,
     hands: {
       P1: [{ suit: Suit.Hearts, rank: Rank.Ace }],
-      P2: [{ suit: Suit.Hearts, rank: Rank.Two }],
-      P3: [{ suit: Suit.Spades, rank: Rank.Three }],
+      P2: [{ suit: Suit.Hearts, rank: Rank.Six }],
+      P3: [{ suit: Suit.Spades, rank: Rank.Seven }],
       P4: [{ suit: Suit.Clubs, rank: Rank.Ace }],
     },
     bids: players.map((playerId) => ({ playerId, tricks: 0 })),
@@ -122,12 +139,13 @@ test("playCard rejects illegal plays and awards trump trick winner", () => {
   assert.throws(() => playCard(baseRound, "P1", { suit: Suit.Clubs, rank: Rank.Ace }), /Illegal card play/)
 
   let round = playCard(baseRound, "P1", { suit: Suit.Hearts, rank: Rank.Ace })
-  round = playCard(round, "P2", { suit: Suit.Hearts, rank: Rank.Two })
-  round = playCard(round, "P3", { suit: Suit.Spades, rank: Rank.Three })
+  round = playCard(round, "P2", { suit: Suit.Hearts, rank: Rank.Six })
+  round = playCard(round, "P3", { suit: Suit.Spades, rank: Rank.Seven })
   round = playCard(round, "P4", { suit: Suit.Clubs, rank: Rank.Ace })
 
   assert.equal(round.phase, RoundPhase.Scoring)
   assert.equal(round.currentTrick.winnerId, "P3")
+  assert.equal(round.lastTrick?.winnerId, "P3")
   assert.equal(round.tricksWon.P3, 1)
 })
 
@@ -138,6 +156,7 @@ test("scoreRound adds tricks and exact-bid bonus", () => {
     playerOrder: players,
     dealerIndex: 0,
     cardsPerPlayer: 1,
+    trumpCard: { suit: Suit.Spades, rank: Rank.Ace },
     trumpSuit: Suit.Spades,
     hands: Object.fromEntries(players.map((player) => [player, []])),
     bids: [

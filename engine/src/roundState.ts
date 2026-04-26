@@ -5,7 +5,7 @@ export type PlayerId = string
 
 export const MIN_PLAYERS = 3
 export const MAX_PLAYERS = 6
-export const DECK_SIZE = 52
+export const DECK_SIZE = 36
 
 export enum RoundPhase {
   Bidding = "BIDDING",
@@ -39,12 +39,14 @@ export type RoundState = {
   dealerIndex: number
 
   cardsPerPlayer: number
+  trumpCard: Card
   trumpSuit: Suit
 
   hands: Record<PlayerId, Card[]>
 
   bids: Bid[] // in bidding order
   currentTrick: TrickState
+  lastTrick?: TrickState
   tricksWon: Record<PlayerId, number>
 }
 
@@ -114,6 +116,7 @@ export function createRound(args: {
     playerOrder,
     dealerIndex,
     cardsPerPlayer,
+    trumpCard,
     trumpSuit: trumpCard.suit,
     hands,
     bids: [],

@@ -195,10 +195,66 @@ p {
 
 .facts span,
 .actionBox,
-.trick {
+.trick,
+.trumpSpot {
   border-radius: 1rem;
   padding: 0.85rem;
   background: rgba(0, 0, 0, 0.18);
+}
+
+.gameground {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  gap: 1rem;
+  border: 1px solid rgba(245, 196, 107, 0.22);
+  border-radius: 1.6rem;
+  padding: 1rem;
+  background: radial-gradient(circle at center, rgba(32, 104, 68, 0.62), rgba(17, 58, 40, 0.42));
+}
+
+.trumpSpot {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  min-height: 10rem;
+  background: rgba(255, 248, 235, 0.1);
+}
+
+.trumpSpot span {
+  color: #e6cfb0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.trumpSpot strong {
+  display: grid;
+  place-items: center;
+  width: 5.2rem;
+  height: 7rem;
+  border-radius: 0.8rem;
+  color: #24160e;
+  background: #fff8eb;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.28);
+  font-size: 1.8rem;
+}
+
+.trumpSpot .hearts,
+.trumpSpot .diamonds {
+  color: #b81f2d;
+}
+
+.trickHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.leadHint {
+  margin-bottom: 0.75rem;
+  color: #e6cfb0;
 }
 
 .cardsRow,
@@ -216,6 +272,20 @@ p {
   color: #24160e;
   background: #fff8eb;
   text-align: center;
+}
+
+.played.lead {
+  outline: 3px solid #f5c46b;
+  outline-offset: 2px;
+}
+
+.played em {
+  color: #9a6b1d;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }
 
 .played {
@@ -253,6 +323,10 @@ p {
 
   .grid.two,
   .gameLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .gameground {
     grid-template-columns: 1fr;
   }
 }

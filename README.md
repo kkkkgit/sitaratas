@@ -1,6 +1,16 @@
 # sitaratas
 Multiplayer trick-taking card game.
 
+## Rules Implemented
+
+- 36-card deck from 6 to ace.
+- 3-6 players.
+- Bidding starts after the dealer and dealer bids last.
+- Total bids cannot equal the number of tricks in the round.
+- Players must follow the lead suit if possible; otherwise they must play trump if possible.
+- Scoring is 1 point per trick plus 5 points for matching the bid exactly.
+- The UI shows the exact trump card, current lead card, current trick, and last completed trick.
+
 ## Local Development
 
 Install dependencies:

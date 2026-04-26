@@ -37,9 +37,16 @@ type SafeGame = {
     playerOrder: string[]
     dealerIndex: number
     cardsPerPlayer: number
+    trumpCard: Card
     trumpSuit: Suit
     bids: Bid[]
     currentTrick: {
+      leaderId: string
+      plays: PlayedCard[]
+      leadSuit?: Suit
+      winnerId?: string
+    }
+    lastTrick?: {
       leaderId: string
       plays: PlayedCard[]
       leadSuit?: Suit
@@ -290,7 +297,7 @@ function GameView({ room, send }: { room: RoomState; send: (message: unknown) =>
 
         <div className="facts">
           <span>Cards: {game.round.cardsPerPlayer}</span>
-          <span>Trump: {suitLabel(game.round.trumpSuit)}</span>
+          <span>Trump: {cardLabel(game.round.trumpCard)} ({suitLabel(game.round.trumpSuit)})</span>
           <span>Dealer: {playerName(room, game.round.playerOrder[game.round.dealerIndex])}</span>
         </div>
 
@@ -331,16 +338,29 @@ function GameView({ room, send }: { room: RoomState; send: (message: unknown) =>
 
         {game.round.phase === "DONE" && <div className="actionBox"><h3>Game finished</h3></div>}
 
-        <div className="trick">
-          <h3>Current Trick</h3>
-          <div className="cardsRow">
-            {game.round.currentTrick.plays.length === 0 ? <span className="hint">No cards played yet.</span> : game.round.currentTrick.plays.map((play) => (
-              <div className="played" key={`${play.playerId}-${play.card.suit}-${play.card.rank}`}>
-                <strong>{cardLabel(play.card)}</strong>
-                <span>{playerName(room, play.playerId)}</span>
-              </div>
-            ))}
+        <div className="gameground">
+          <div className="trumpSpot">
+            <span>Trump card</span>
+            <strong className={game.round.trumpCard.suit.toLowerCase()}>{cardLabel(game.round.trumpCard)}</strong>
           </div>
+
+          <TrickView
+            title="Current Trick"
+            room={room}
+            plays={game.round.currentTrick.plays}
+            leadSuit={game.round.currentTrick.leadSuit}
+            winnerId={game.round.currentTrick.winnerId}
+            emptyText="No cards played yet. The first card becomes the lead card."
+          />
+
+          <TrickView
+            title="Last Trick"
+            room={room}
+            plays={game.round.lastTrick?.plays ?? []}
+            leadSuit={game.round.lastTrick?.leadSuit}
+            winnerId={game.round.lastTrick?.winnerId}
+            emptyText="No completed trick yet."
+          />
         </div>
 
         <div>
@@ -376,5 +396,46 @@ function GameView({ room, send }: { room: RoomState; send: (message: unknown) =>
         ))}
       </aside>
     </section>
+  )
+}
+
+function TrickView({
+  title,
+  room,
+  plays,
+  leadSuit,
+  winnerId,
+  emptyText,
+}: {
+  title: string
+  room: RoomState
+  plays: PlayedCard[]
+  leadSuit?: Suit
+  winnerId?: string
+  emptyText: string
+}) {
+  const leadCard = plays[0]?.card
+
+  return (
+    <div className="trick">
+      <div className="trickHeader">
+        <h3>{title}</h3>
+        {winnerId && <span className="pill">Winner: {playerName(room, winnerId)}</span>}
+      </div>
+      {leadCard && (
+        <p className="leadHint">
+          Lead card: <strong>{cardLabel(leadCard)}</strong>. Follow {suitLabel(leadSuit ?? leadCard.suit)} if you can, otherwise play trump.
+        </p>
+      )}
+      <div className="cardsRow">
+        {plays.length === 0 ? <span className="hint">{emptyText}</span> : plays.map((play, index) => (
+          <div className={`played ${index === 0 ? "lead" : ""}`} key={`${play.playerId}-${play.card.suit}-${play.card.rank}`}>
+            <strong>{cardLabel(play.card)}</strong>
+            <span>{playerName(room, play.playerId)}</span>
+            {index === 0 && <em>lead</em>}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }

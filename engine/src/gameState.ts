@@ -6,7 +6,7 @@ export type GameState = {
   dealerIndex: number
 
   maxCardsPerPlayer: number
-  schedule: number[] // e.g. [1,1,1,1,2,3,...,9,8,...,1]
+  schedule: number[] // e.g. [1,1,1,1,2,3,...,9,9,9,9,8,...,2,1,1,1,1]
 
   roundIndex: number
   round: RoundState
@@ -15,18 +15,19 @@ export type GameState = {
 }
 
 function buildSchedule(max: number, nPlayers: number): number[] {
-  // Start with nPlayers rounds of 1 card each
   const start: number[] = Array(nPlayers).fill(1)
-  
-  // Then go up from 2 to max
+
   const up: number[] = []
-  for (let i = 2; i <= max; i++) up.push(i)
-  
-  // Then go down from max-1 to 1
+  for (let i = 2; i < max; i++) up.push(i)
+
+  const peak: number[] = Array(nPlayers).fill(max)
+
   const down: number[] = []
-  for (let i = max - 1; i >= 1; i--) down.push(i)
-  
-  return [...start, ...up, ...down]
+  for (let i = max - 1; i >= 2; i--) down.push(i)
+
+  const end: number[] = Array(nPlayers).fill(1)
+
+  return [...start, ...up, ...peak, ...down, ...end]
 }
 
 function nextDealerIndex(current: number, n: number): number {
@@ -48,7 +49,7 @@ export function createGame(args: {
   }
   if (new Set(playerOrder).size !== playerOrder.length) throw new Error("Player IDs must be unique")
 
-  const dealerIndex = args.dealerIndex ?? 0
+  const dealerIndex = args.dealerIndex ?? Math.floor((rng ?? Math.random)() * playerOrder.length)
   if (dealerIndex < 0 || dealerIndex >= playerOrder.length) throw new Error("Invalid dealerIndex")
 
   const maxCardsPerPlayer = computeMaxCardsPerPlayer(playerOrder.length)

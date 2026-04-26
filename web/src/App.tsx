@@ -120,6 +120,16 @@ function nextPlayer(game: SafeGame): string | undefined {
   return round.playerOrder[(leaderIndex + round.currentTrick.plays.length) % n]
 }
 
+function forbiddenDealerBid(game: SafeGame): number | undefined {
+  const { round } = game
+  const dealerId = round.playerOrder[round.dealerIndex]
+  if (nextBidder(game) !== dealerId) return undefined
+
+  const sumSoFar = round.bids.reduce((sum, currentBid) => sum + currentBid.tricks, 0)
+  const forbidden = round.cardsPerPlayer - sumSoFar
+  return forbidden >= 0 && forbidden <= round.cardsPerPlayer ? forbidden : undefined
+}
+
 export function App() {
   const socketRef = useRef<WebSocket | null>(null)
   const [connected, setConnected] = useState(false)
@@ -253,12 +263,19 @@ function GameView({ room, send }: { room: RoomState; send: (message: unknown) =>
   const isHost = room.youId === room.hostId
   const bidder = game.round.phase === "BIDDING" ? nextBidder(game) : undefined
   const playerToAct = game.round.phase === "PLAYING" ? nextPlayer(game) : undefined
+  const forbiddenBid = game.round.phase === "BIDDING" ? forbiddenDealerBid(game) : undefined
   const yourTurnToBid = bidder === room.youId
   const yourTurnToPlay = playerToAct === room.youId
   const bidOptions = useMemo(
     () => Array.from({ length: game.round.cardsPerPlayer + 1 }, (_, value) => value),
     [game.round.cardsPerPlayer]
   )
+
+  useEffect(() => {
+    if (bid !== forbiddenBid) return
+    const nextAllowedBid = bidOptions.find((option) => option !== forbiddenBid)
+    if (nextAllowedBid !== undefined) setBid(nextAllowedBid)
+  }, [bid, bidOptions, forbiddenBid])
 
   return (
     <section className="gameLayout">
@@ -281,11 +298,18 @@ function GameView({ room, send }: { room: RoomState; send: (message: unknown) =>
           <div className="actionBox">
             <h3>Bidding</h3>
             <p>{yourTurnToBid ? "Your bid." : `${playerName(room, bidder ?? "")} is bidding.`}</p>
+            {forbiddenBid !== undefined && (
+              <p className="hint">Dealer cannot bid {forbiddenBid}, because total bids cannot equal {game.round.cardsPerPlayer}.</p>
+            )}
             <div className="inline">
               <select value={bid} onChange={(event) => setBid(Number(event.target.value))} disabled={!yourTurnToBid}>
-                {bidOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+                {bidOptions.map((option) => (
+                  <option key={option} value={option} disabled={option === forbiddenBid}>
+                    {option}{option === forbiddenBid ? " (not allowed)" : ""}
+                  </option>
+                ))}
               </select>
-              <button type="button" disabled={!yourTurnToBid} onClick={() => send({ type: "PLACE_BID", tricks: bid })}>Place bid</button>
+              <button type="button" disabled={!yourTurnToBid || bid === forbiddenBid} onClick={() => send({ type: "PLACE_BID", tricks: bid })}>Place bid</button>
             </div>
           </div>
         )}
